@@ -49,7 +49,6 @@ usage(){
   echo "                    and wait <sec> seconds before executing the"
   echo "                    commands given with \"-c\" or in case of \"-p\" after"
   echo "                    the creation of the pxe boot files."
-  echo " -u                 Use broadcast address with wol."
   echo " -s                 Select a school other than default-school"
   echo
   echo "Important: * Options \"-r\", \"-g\" and \"-i\" exclude each other, \"-c\" and"
@@ -147,7 +146,6 @@ while getopts ":b:c:dg:hi:lnp:r:uw:s:" opt; do
     g) GROUP=$OPTARG ;;
     p) ONBOOT=$OPTARG  ;;
     r) ROOM=$OPTARG ;;
-    u) USEBCADDR=yes ;;
     w) WAIT=$OPTARG
       isinteger "$WAIT" || usage ;;
     n) NOAUTO=yes ;;
@@ -417,15 +415,13 @@ if [ -n "$WAIT" ]; then
     macaddr="$(get_mac "$(echo $i | sed "s/^$SCHOOL-//g")")"
     ipaddr="$(get_ip "$(echo $i | sed "s/^$SCHOOL-//g")")"
     # use broadcast address
-    if [ -n "$USEBCADDR" ]; then
-      if validip "$i"; then
-        hostip="$i"
-      else
-        hostip="$(get_ip "$i")"
-      fi
-      bcaddr=$(get_bcaddress "$hostip")
-      [ -n "$bcaddr" ] && WOL="$WOL -i $bcaddr"
+    if validip "$i"; then
+      hostip="$i"
+    else
+      hostip="$(get_ip "$i")"
     fi
+    bcaddr=$(get_bcaddress "$hostip")
+    [ -n "$bcaddr" ] && WOL="$WOL -i $bcaddr"
 
     [ -n "$DIRECT" ] && $WOL "$macaddr"
     if [ -n "$ONBOOT" ]; then
